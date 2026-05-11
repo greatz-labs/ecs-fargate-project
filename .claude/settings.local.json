@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(terraform init *)",
+      "Bash(terraform validate *)",
+      "WebFetch(domain:levelup.gitconnected.com)",
+      "WebFetch(domain:medium.com)",
+      "Bash(terraform fmt *)",
+      "Bash(terraform -chdir=/Users/smyndlo/Documents/Dev-projects/ecs-fargate-project validate)",
+      "Bash(chmod +x /Users/smyndlo/Documents/Dev-projects/ecs-fargate-project/bootstrap.sh)",
+      "Bash(terraform -chdir=/Users/smyndlo/Documents/Dev-projects/ecs-fargate-project init -backend=false -upgrade)"
+    ]
+  }
+}
