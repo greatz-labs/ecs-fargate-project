@@ -57,7 +57,7 @@ jobs:
       #   CKV_AWS_130 — Public subnets auto-assign IPs: required for ALB and NAT GW
       #   CKV_AWS_378 — HTTP target group: ALB→container traffic is internal HTTP only
       #   CKV_AWS_103 — TLS on HTTP listener: HTTP listener is a 301 redirect, no TLS
-      #   CKV2_AWS_20 — HTTP→HTTPS redirect: requires certificate_arn (not set in lab)
+      #   CKV2_AWS_20 — HTTP→HTTPS redirect: Checkov cannot resolve data source ARN at static analysis time; redirect is live
       #
       # Lab/non-production trade-offs:
       #   CKV_AWS_150 — ALB deletion protection disabled (needed for terraform destroy)
