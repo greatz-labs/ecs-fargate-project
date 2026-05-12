@@ -4,8 +4,6 @@ data "aws_elb_service_account" "this" {}
 locals {
   name_prefix   = "${var.project_name}-${var.environment}"
   https_enabled = var.certificate_arn != ""
-  # Points the active listener at whichever slot is live — change active_color + apply to cut over
-  active_tg_arn = var.active_color == "blue" ? aws_lb_target_group.blue.arn : aws_lb_target_group.green.arn
 
   common_tags = merge(var.tags, {
     Project     = var.project_name
@@ -222,8 +220,17 @@ resource "aws_lb_listener" "http" {
   dynamic "default_action" {
     for_each = local.https_enabled ? [] : [1]
     content {
-      type             = "forward"
-      target_group_arn = local.active_tg_arn
+      type = "forward"
+      forward {
+        target_group {
+          arn    = aws_lb_target_group.blue.arn
+          weight = var.active_color == "blue" ? 100 : 0
+        }
+        target_group {
+          arn    = aws_lb_target_group.green.arn
+          weight = var.active_color == "green" ? 100 : 0
+        }
+      }
     }
   }
 
@@ -240,8 +247,17 @@ resource "aws_lb_listener" "https" {
   certificate_arn   = var.certificate_arn
 
   default_action {
-    type             = "forward"
-    target_group_arn = local.active_tg_arn
+    type = "forward"
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.blue.arn
+        weight = var.active_color == "blue" ? 100 : 0
+      }
+      target_group {
+        arn    = aws_lb_target_group.green.arn
+        weight = var.active_color == "green" ? 100 : 0
+      }
+    }
   }
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-listener-https" })
