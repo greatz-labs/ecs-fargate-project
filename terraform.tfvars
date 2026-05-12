@@ -30,7 +30,7 @@ max_capacity = 4
 
 # ── Blue-Green ────────────────────────────────────────────────────────────────
 # Change active_color to "green" + terraform apply to cut over; revert to roll back
-active_color  = "green" #"blue"
+active_color  = "blue"
 blue_version  = "1.0.0"
 green_version = "2.0.0"
 
