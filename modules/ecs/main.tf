@@ -188,9 +188,10 @@ resource "aws_ecs_service" "this" {
     rollback = true
   }
 
-  # CI/CD updates task_definition directly; autoscaling owns desired_count
+  # CI/CD updates task_definition directly; Terraform owns desired_count
+  # so it can zero out the standby slot on cutover.
   lifecycle {
-    ignore_changes = [task_definition, desired_count]
+    ignore_changes = [task_definition]
   }
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-service" })
