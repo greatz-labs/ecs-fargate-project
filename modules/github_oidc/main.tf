@@ -23,8 +23,8 @@ locals {
 resource "aws_iam_openid_connect_provider" "this" {
   count = var.create_oidc_provider ? 1 : 0
 
-  url             = local.github_oidc_url
-  client_id_list  = ["sts.amazonaws.com"]
+  url            = local.github_oidc_url
+  client_id_list = ["sts.amazonaws.com"]
 
   # DigiCert root CA thumbprints for token.actions.githubusercontent.com
   # AWS validates against its own trust store since 2023, but the field is still required.

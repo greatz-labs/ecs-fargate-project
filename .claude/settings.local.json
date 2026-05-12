@@ -10,5 +10,17 @@
       "Bash(chmod +x /Users/smyndlo/Documents/Dev-projects/ecs-fargate-project/bootstrap.sh)",
       "Bash(terraform -chdir=/Users/smyndlo/Documents/Dev-projects/ecs-fargate-project init -backend=false -upgrade)"
     ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/smyndlo/Documents/Dev-projects/ecs-fargate-project/.claude/hooks/auto-push.sh"
+          }
+        ]
+      }
+    ]
   }
 }
