@@ -44,20 +44,42 @@ jobs:
         run: terraform validate
 
       # Scans Terraform for misconfigs before planning.
-      # Skips below are lab-only trade-offs — document any new skip added here:
-      #   CKV_AWS_158 — CloudWatch log encryption requires KMS CMK (lab cost)
-      #   CKV_AWS_150 — ALB deletion protection (lab, needed for terraform destroy)
+      # Skips below are documented trade-offs — add a reason for any new entry:
+      #
+      # Lab cost (would require paid AWS features):
+      #   CKV_AWS_158 — CloudWatch log encryption requires KMS CMK
+      #   CKV_AWS_136 — ECR KMS CMK encryption
+      #   CKV2_AWS_28 — WAF on public ALB
+      #
+      # Architectural requirements (cannot be changed without breaking the design):
+      #   CKV_AWS_382 — Open egress on SGs: ALB→tasks + tasks→ECR/CW/SSM
+      #   CKV_AWS_260 — Port 80 ingress on ALB: internet-facing by design
+      #   CKV_AWS_130 — Public subnets auto-assign IPs: required for ALB and NAT GW
+      #   CKV_AWS_378 — HTTP target group: ALB→container traffic is internal HTTP only
+      #   CKV_AWS_103 — TLS on HTTP listener: HTTP listener is a 301 redirect, no TLS
+      #   CKV2_AWS_20 — HTTP→HTTPS redirect: requires certificate_arn (not set in lab)
+      #
+      # Lab/non-production trade-offs:
+      #   CKV_AWS_150 — ALB deletion protection disabled (needed for terraform destroy)
       #   CKV_AWS_131 — ALB drop invalid HTTP headers (HTTP-only lab endpoint)
-      #   CKV_AWS_18  — S3 access logging on the ALB-logs bucket (avoids recursive logging)
-      #   CKV_AWS_144 — S3 cross-region replication (lab)
-      #   CKV_AWS_145 — S3 KMS encryption — SSE-S3 is sufficient for access logs (lab)
-      #   CKV2_AWS_62 — S3 event notifications (lab)
+      #   CKV_AWS_21  — S3 versioning on alb-logs bucket (logs don't benefit from versioning)
+      #   CKV_AWS_18  — S3 access logging on alb-logs bucket (avoids recursive logging)
+      #   CKV_AWS_144 — S3 cross-region replication
+      #   CKV_AWS_145 — S3 KMS encryption — SSE-S3 sufficient for access logs
+      #   CKV2_AWS_62 — S3 event notifications
+      #
+      # Terraform CI/CD role — broad permissions are intentional for an infrastructure provisioner:
+      #   CKV_AWS_290 — Write access without resource constraint (Terraform needs iam/ecs/ecr/etc)
+      #   CKV_AWS_355 — * resource for restrictable actions (same)
+      #   CKV_AWS_287 — Credentials exposure (iam:GetRole etc needed by Terraform)
+      #   CKV_AWS_286 — Privilege escalation (Terraform needs iam:PassRole scoped to project)
+      #   CKV_AWS_289 — Permissions management (Terraform manages IAM for this project)
       - name: Checkov IaC scan
         id: checkov
         run: |
           pip install checkov --quiet
           checkov -d . --framework terraform --compact \
-            --skip-check CKV_AWS_158,CKV_AWS_150,CKV_AWS_131,CKV_AWS_18,CKV_AWS_144,CKV_AWS_145,CKV2_AWS_62
+            --skip-check CKV_AWS_158,CKV_AWS_136,CKV2_AWS_28,CKV_AWS_382,CKV_AWS_260,CKV_AWS_130,CKV_AWS_378,CKV_AWS_103,CKV2_AWS_20,CKV_AWS_150,CKV_AWS_131,CKV_AWS_21,CKV_AWS_18,CKV_AWS_144,CKV_AWS_145,CKV2_AWS_62,CKV_AWS_290,CKV_AWS_355,CKV_AWS_287,CKV_AWS_286,CKV_AWS_289
         continue-on-error: true
 
       # continue-on-error so we can always post the comment, even on plan failure

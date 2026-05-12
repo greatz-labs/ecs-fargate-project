@@ -115,12 +115,22 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
+# ── Default security group ────────────────────────────────────────────────────
+# Explicitly removes all rules from the default SG so traffic must use named SGs.
+
+resource "aws_default_security_group" "this" {
+  vpc_id = aws_vpc.this.id
+  # No ingress or egress blocks — deny all by default
+
+  tags = merge(local.common_tags, { Name = "${local.name_prefix}-default-sg" })
+}
+
 # ── VPC Flow Logs ─────────────────────────────────────────────────────────────
 # Logs all accepted/rejected traffic for the VPC — required by CIS AWS Benchmark.
 
 resource "aws_cloudwatch_log_group" "flow_logs" {
   name              = "/vpc/${local.name_prefix}-flow-logs"
-  retention_in_days = 30
+  retention_in_days = 365 # CIS benchmark minimum
 
   tags = merge(local.common_tags, { Name = "/vpc/${local.name_prefix}-flow-logs" })
 }

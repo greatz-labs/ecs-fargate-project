@@ -93,9 +93,9 @@ variable "health_check_path" {
 }
 
 variable "log_retention_days" {
-  description = "CloudWatch log retention in days"
+  description = "CloudWatch log retention in days — CIS benchmark requires >= 365"
   type        = number
-  default     = 30
+  default     = 365
 }
 
 variable "min_capacity" {

@@ -54,6 +54,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
     expiration {
       days = 90
     }
+
+    # Prevents incomplete multipart uploads from accumulating indefinitely
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
   }
 }
 
@@ -99,6 +104,7 @@ resource "aws_security_group" "alb" {
 
   # ALB must reach tasks on the container port
   egress {
+    description = "Outbound to ECS tasks and AWS endpoints"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"

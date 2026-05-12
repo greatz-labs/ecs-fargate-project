@@ -22,7 +22,7 @@ cpu                = "512"
 memory             = "1024"
 desired_count      = 2
 image_tag          = "latest" # replace with git SHA in CI
-log_retention_days = 30
+log_retention_days = 365      # CIS benchmark minimum
 
 # ── HTTPS ─────────────────────────────────────────────────────────────────────
 # certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/..."
