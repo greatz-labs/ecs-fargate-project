@@ -149,13 +149,15 @@ Merge the application branch to `main`. The deploy workflow will:
 
 ## Blue-green cutover
 
-Traffic is controlled by the `active_color` variable. The ALB listener uses weighted forwarding — the active slot gets weight 100, the standby gets weight 0. Changing `active_color` and applying is the only action required to shift traffic.
+Traffic is controlled by `active_color`. The ALB uses weighted forwarding — active slot gets weight 100, standby gets weight 0.
 
-### Step 1 — Deploy new version to the standby slot
+Blue keeps running until you explicitly scale it down. This gives you a safe window to validate green under live traffic before removing the fallback.
 
-Update the GitHub variables to target the standby, then push to `main` to trigger the deploy workflow:
+### Step 1 — Warm up the standby
 
-**Cutting over to green (green is standby):**
+Update the GitHub variables to point at the standby slot, then push to `main`:
+
+**Example: green is standby (blue is active)**
 
 | Variable | Value |
 |---|---|
@@ -164,38 +166,54 @@ Update the GitHub variables to target the standby, then push to `main` to trigge
 | `TASK_DEFINITION_FAMILY` | `ecs-fargate-dev-green-task` |
 | `CONTAINER_NAME` | `ecs-fargate-green-app` |
 
-The deploy workflow scales green up, pushes the new image, and waits for stability.
+The deploy workflow pushes the new image to ECR and updates the green task definition. At this point green is running but receiving no traffic.
 
-### Step 2 — Validate the standby
+### Step 2 — Shift traffic, keep blue warm
+
+```hcl
+# terraform.tfvars
+active_color        = "green"
+green_desired_count = 2   # already running from step 1
+blue_desired_count  = 2   # keep blue alive for rollback
+```
+
+```bash
+terraform apply   # only the ALB listener weights change
+```
+
+Green now receives 100% of traffic. Blue tasks remain running — instant rollback if needed.
+
+### Step 3 — Validate
 
 ```bash
 curl https://<alb-dns>/version
 # {"color": "green", "version": "2.0.0", ...}
 ```
 
-### Step 3 — Cut over
+Check CloudWatch logs, error rates, and latency before proceeding.
+
+### Step 4 — Scale down blue
+
+Once satisfied that green is stable:
 
 ```hcl
 # terraform.tfvars
-active_color = "green"
+blue_desired_count = 0
 ```
 
 ```bash
-terraform apply
+terraform apply   # blue tasks drain and stop
 ```
 
-This atomically:
-- Flips the ALB listener weights (green=100, blue=0)
-- Sets green `desired_count` to `var.desired_count`
-- Sets blue `desired_count` to 0 (standby idles)
+### Roll back (before step 4)
 
-The listener update completes in ~30 seconds with zero downtime — existing connections drain before blue tasks stop.
-
-### Roll back
+Blue is still running — flip traffic back in seconds:
 
 ```hcl
 # terraform.tfvars
-active_color = "blue"
+active_color        = "blue"
+blue_desired_count  = 2
+green_desired_count = 0
 ```
 
 ```bash

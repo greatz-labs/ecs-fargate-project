@@ -123,6 +123,18 @@ variable "green_version" {
   default     = "2.0.0"
 }
 
+variable "blue_desired_count" {
+  description = "Number of tasks for the blue slot. Set to 0 only after validating the active slot."
+  type        = number
+  default     = 2
+}
+
+variable "green_desired_count" {
+  description = "Number of tasks for the green slot. Set to 0 only after validating the active slot."
+  type        = number
+  default     = 0
+}
+
 variable "max_capacity" {
   description = "Maximum number of ECS tasks (autoscaling ceiling)"
   type        = number

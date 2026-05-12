@@ -29,10 +29,13 @@ min_capacity = 1
 max_capacity = 4
 
 # ── Blue-Green ────────────────────────────────────────────────────────────────
-# Change active_color to "green" + terraform apply to cut over; revert to roll back 
-active_color  = "green"
-blue_version  = "1.0.0"
-green_version = "2.0.0"
+# Cutover: set active_color + bump the standby desired_count to var.desired_count,
+# then apply. Scale down the old active only after validating the new one.
+active_color        = "green"
+blue_desired_count  = 0
+green_desired_count = 2
+blue_version        = "1.0.0"
+green_version       = "2.0.0"
 
 # ── GitHub OIDC ───────────────────────────────────────────────────────────────
 github_org      = "greatz-labs"

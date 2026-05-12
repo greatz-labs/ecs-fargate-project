@@ -92,11 +92,10 @@ module "ecs_blue" {
   container_port        = var.container_port
   cpu                   = var.cpu
   memory                = var.memory
-  # Active slot runs var.desired_count tasks; standby idles at 0
-  desired_count      = var.active_color == "blue" ? var.desired_count : 0
-  image_tag          = var.image_tag
-  health_check_path  = var.health_check_path
-  log_retention_days = var.log_retention_days
+  desired_count         = var.blue_desired_count
+  image_tag             = var.image_tag
+  health_check_path     = var.health_check_path
+  log_retention_days    = var.log_retention_days
   environment_variables = {
     APP_COLOR               = "blue"
     APP_VERSION             = var.blue_version
@@ -122,11 +121,10 @@ module "ecs_green" {
   container_port        = var.container_port
   cpu                   = var.cpu
   memory                = var.memory
-  # Active slot runs var.desired_count tasks; standby idles at 0
-  desired_count      = var.active_color == "green" ? var.desired_count : 0
-  image_tag          = var.image_tag
-  health_check_path  = var.health_check_path
-  log_retention_days = var.log_retention_days
+  desired_count         = var.green_desired_count
+  image_tag             = var.image_tag
+  health_check_path     = var.health_check_path
+  log_retention_days    = var.log_retention_days
   environment_variables = {
     APP_COLOR               = "green"
     APP_VERSION             = var.green_version
