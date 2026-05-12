@@ -6,6 +6,17 @@ variable "environment" {
   type = string
 }
 
+variable "slot" {
+  description = "Deployment slot (blue or green). Appended to all resource names so both slots can coexist."
+  type        = string
+  default     = "blue"
+
+  validation {
+    condition     = contains(["blue", "green"], var.slot)
+    error_message = "slot must be \"blue\" or \"green\"."
+  }
+}
+
 variable "vpc_id" {
   type = string
 }

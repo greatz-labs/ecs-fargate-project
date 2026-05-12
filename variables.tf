@@ -98,6 +98,31 @@ variable "min_capacity" {
   default     = 1
 }
 
+# ── Blue-Green ────────────────────────────────────────────────────────────────
+
+variable "active_color" {
+  description = "Which slot receives live traffic (blue or green). Change and re-apply to cut over."
+  type        = string
+  default     = "blue"
+
+  validation {
+    condition     = contains(["blue", "green"], var.active_color)
+    error_message = "active_color must be \"blue\" or \"green\"."
+  }
+}
+
+variable "blue_version" {
+  description = "APP_VERSION injected into blue ECS tasks"
+  type        = string
+  default     = "1.0.0"
+}
+
+variable "green_version" {
+  description = "APP_VERSION injected into green ECS tasks"
+  type        = string
+  default     = "2.0.0"
+}
+
 variable "max_capacity" {
   description = "Maximum number of ECS tasks (autoscaling ceiling)"
   type        = number

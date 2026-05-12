@@ -28,6 +28,12 @@ log_retention_days = 365      # CIS benchmark minimum
 min_capacity = 1
 max_capacity = 4
 
+# ── Blue-Green ────────────────────────────────────────────────────────────────
+# Change active_color to "green" + terraform apply to cut over; revert to roll back
+active_color  = "blue"
+blue_version  = "1.0.0"
+green_version = "2.0.0"
+
 # ── GitHub OIDC ───────────────────────────────────────────────────────────────
 github_org      = "greatz-labs"
 github_repo     = "ecs-fargate-project"

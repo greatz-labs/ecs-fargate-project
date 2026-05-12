@@ -26,6 +26,17 @@ variable "certificate_arn" {
   default     = ""
 }
 
+variable "active_color" {
+  description = "Which slot the ALB listener forwards to (blue or green). Change and re-apply to cut over."
+  type        = string
+  default     = "blue"
+
+  validation {
+    condition     = contains(["blue", "green"], var.active_color)
+    error_message = "active_color must be \"blue\" or \"green\"."
+  }
+}
+
 variable "health_check_path" {
   description = "Path the ALB uses to health-check tasks"
   type        = string

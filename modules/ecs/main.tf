@@ -1,8 +1,8 @@
 data "aws_region" "current" {}
 
 locals {
-  name_prefix    = "${var.project_name}-${var.environment}"
-  container_name = "${var.project_name}-app"
+  name_prefix    = "${var.project_name}-${var.environment}-${var.slot}"
+  container_name = "${var.project_name}-${var.slot}-app"
 
   common_tags = merge(var.tags, {
     Project     = var.project_name
