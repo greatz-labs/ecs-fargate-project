@@ -97,8 +97,8 @@ module "ecs_blue" {
   health_check_path     = var.health_check_path
   log_retention_days    = var.log_retention_days
   environment_variables = {
-    APP_COLOR              = "blue"
-    APP_VERSION            = var.blue_version
+    APP_COLOR               = "blue"
+    APP_VERSION             = var.blue_version
     PYTHONDONTWRITEBYTECODE = "1"
   }
   tags = var.tags
@@ -126,8 +126,8 @@ module "ecs_green" {
   health_check_path     = var.health_check_path
   log_retention_days    = var.log_retention_days
   environment_variables = {
-    APP_COLOR              = "green"
-    APP_VERSION            = var.green_version
+    APP_COLOR               = "green"
+    APP_VERSION             = var.green_version
     PYTHONDONTWRITEBYTECODE = "1"
   }
   tags = var.tags
