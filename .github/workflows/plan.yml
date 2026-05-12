@@ -57,7 +57,6 @@ jobs:
       #   CKV_AWS_130 — Public subnets auto-assign IPs: required for ALB and NAT GW
       #   CKV_AWS_378 — HTTP target group: ALB→container traffic is internal HTTP only
       #   CKV_AWS_103 — TLS on HTTP listener: HTTP listener is a 301 redirect, no TLS
-      #   CKV2_AWS_20 — HTTP→HTTPS redirect: requires certificate_arn (not set in lab)
       #
       # Lab/non-production trade-offs:
       #   CKV_AWS_150 — ALB deletion protection disabled (needed for terraform destroy)
@@ -79,7 +78,7 @@ jobs:
         run: |
           pip install checkov --quiet
           checkov -d . --framework terraform --compact \
-            --skip-check CKV_AWS_158,CKV_AWS_136,CKV2_AWS_28,CKV_AWS_382,CKV_AWS_260,CKV_AWS_130,CKV_AWS_378,CKV_AWS_103,CKV2_AWS_20,CKV_AWS_150,CKV_AWS_131,CKV_AWS_21,CKV_AWS_18,CKV_AWS_144,CKV_AWS_145,CKV2_AWS_62,CKV_AWS_290,CKV_AWS_355,CKV_AWS_287,CKV_AWS_286,CKV_AWS_289
+            --skip-check CKV_AWS_158,CKV_AWS_136,CKV2_AWS_28,CKV_AWS_382,CKV_AWS_260,CKV_AWS_130,CKV_AWS_378,CKV_AWS_103,CKV_AWS_150,CKV_AWS_131,CKV_AWS_21,CKV_AWS_18,CKV_AWS_144,CKV_AWS_145,CKV2_AWS_62,CKV_AWS_290,CKV_AWS_355,CKV_AWS_287,CKV_AWS_286,CKV_AWS_289
         continue-on-error: true
 
       # continue-on-error so we can always post the comment, even on plan failure

@@ -56,12 +56,6 @@ variable "container_port" {
   default     = 8080
 }
 
-variable "certificate_arn" {
-  description = "ACM certificate ARN for HTTPS. Leave empty to use HTTP only."
-  type        = string
-  default     = ""
-}
-
 variable "cpu" {
   description = "Fargate task CPU units (256 / 512 / 1024 / 2048 / 4096)"
   type        = string
