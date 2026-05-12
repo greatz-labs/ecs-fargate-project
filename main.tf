@@ -91,7 +91,7 @@ module "ecs" {
 }
 
 module "github_oidc" {
-  count  = var.create_github_oidc ? 1 : 0
+  count  = var.create_github_oidc ? 0 : 1
   source = "./modules/github_oidc"
 
   project_name    = var.project_name
