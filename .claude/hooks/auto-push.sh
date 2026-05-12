@@ -10,6 +10,16 @@ BASE="main"
 
 cd "$PROJECT_DIR"
 
+# ── Pre-flight checks ─────────────────────────────────────────────────────────
+if ! command -v gh &>/dev/null; then
+  echo "✗ 'gh' CLI not found. Install with: brew install gh && gh auth login" >&2
+  exit 1
+fi
+if ! gh auth status &>/dev/null; then
+  echo "✗ 'gh' not authenticated. Run: gh auth login" >&2
+  exit 1
+fi
+
 # ── Skip if working tree is clean ─────────────────────────────────────────────
 if git diff --quiet 2>/dev/null && \
    git diff --staged --quiet 2>/dev/null && \
