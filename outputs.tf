@@ -33,24 +33,44 @@ output "alb_dns_name" {
   value       = try(module.alb[0].alb_dns_name, null)
 }
 
-output "target_group_arn" {
-  description = "ALB target group ARN"
-  value       = try(module.alb[0].target_group_arn, null)
+output "blue_target_group_arn" {
+  description = "Blue slot target group ARN"
+  value       = try(module.alb[0].blue_target_group_arn, null)
 }
 
-output "ecs_cluster_name" {
-  description = "ECS cluster name"
-  value       = try(module.ecs[0].cluster_name, null)
+output "green_target_group_arn" {
+  description = "Green slot target group ARN"
+  value       = try(module.alb[0].green_target_group_arn, null)
 }
 
-output "ecs_service_name" {
-  description = "ECS service name"
-  value       = try(module.ecs[0].service_name, null)
+output "blue_cluster_name" {
+  description = "Blue ECS cluster name"
+  value       = try(module.ecs_blue[0].cluster_name, null)
 }
 
-output "cloudwatch_log_group" {
-  description = "CloudWatch log group for ECS task logs"
-  value       = try(module.ecs[0].cloudwatch_log_group_name, null)
+output "green_cluster_name" {
+  description = "Green ECS cluster name"
+  value       = try(module.ecs_green[0].cluster_name, null)
+}
+
+output "blue_service_name" {
+  description = "Blue ECS service name"
+  value       = try(module.ecs_blue[0].service_name, null)
+}
+
+output "green_service_name" {
+  description = "Green ECS service name"
+  value       = try(module.ecs_green[0].service_name, null)
+}
+
+output "cloudwatch_log_group_blue" {
+  description = "CloudWatch log group for blue ECS task logs"
+  value       = try(module.ecs_blue[0].cloudwatch_log_group_name, null)
+}
+
+output "cloudwatch_log_group_green" {
+  description = "CloudWatch log group for green ECS task logs"
+  value       = try(module.ecs_green[0].cloudwatch_log_group_name, null)
 }
 
 output "github_actions_role_arn" {

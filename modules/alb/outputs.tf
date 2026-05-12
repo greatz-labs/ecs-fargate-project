@@ -13,9 +13,14 @@ output "alb_zone_id" {
   value       = aws_lb.this.zone_id
 }
 
-output "target_group_arn" {
-  description = "Target group ARN — pass to ECS service load_balancer block"
-  value       = aws_lb_target_group.this.arn
+output "blue_target_group_arn" {
+  description = "Blue slot target group ARN"
+  value       = aws_lb_target_group.blue.arn
+}
+
+output "green_target_group_arn" {
+  description = "Green slot target group ARN"
+  value       = aws_lb_target_group.green.arn
 }
 
 output "alb_security_group_id" {

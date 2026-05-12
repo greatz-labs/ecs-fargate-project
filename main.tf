@@ -70,14 +70,16 @@ module "alb" {
   public_subnet_ids = try(module.vpc[0].public_subnet_ids, [])
   container_port    = var.container_port
   certificate_arn   = data.aws_acm_certificate.this.arn
+  active_color      = var.active_color
   health_check_path = var.health_check_path
   tags              = var.tags
 }
 
-module "ecs" {
+module "ecs_blue" {
   count  = var.create_ecs ? 1 : 0
   source = "./modules/ecs"
 
+  slot                  = "blue"
   project_name          = var.project_name
   environment           = var.environment
   vpc_id                = try(module.vpc[0].vpc_id, "")
@@ -85,7 +87,7 @@ module "ecs" {
   execution_role_arn    = try(module.iam[0].execution_role_arn, "")
   task_role_arn         = try(module.iam[0].task_role_arn, "")
   ecr_repository_url    = try(module.ecr[0].repository_url, "")
-  target_group_arn      = try(module.alb[0].target_group_arn, "")
+  target_group_arn      = try(module.alb[0].blue_target_group_arn, "")
   alb_security_group_id = try(module.alb[0].alb_security_group_id, "")
   container_port        = var.container_port
   cpu                   = var.cpu
@@ -94,7 +96,41 @@ module "ecs" {
   image_tag             = var.image_tag
   health_check_path     = var.health_check_path
   log_retention_days    = var.log_retention_days
-  tags                  = var.tags
+  environment_variables = {
+    APP_COLOR               = "blue"
+    APP_VERSION             = var.blue_version
+    PYTHONDONTWRITEBYTECODE = "1"
+  }
+  tags = var.tags
+}
+
+module "ecs_green" {
+  count  = var.create_ecs ? 1 : 0
+  source = "./modules/ecs"
+
+  slot                  = "green"
+  project_name          = var.project_name
+  environment           = var.environment
+  vpc_id                = try(module.vpc[0].vpc_id, "")
+  private_subnet_ids    = try(module.vpc[0].private_subnet_ids, [])
+  execution_role_arn    = try(module.iam[0].execution_role_arn, "")
+  task_role_arn         = try(module.iam[0].task_role_arn, "")
+  ecr_repository_url    = try(module.ecr[0].repository_url, "")
+  target_group_arn      = try(module.alb[0].green_target_group_arn, "")
+  alb_security_group_id = try(module.alb[0].alb_security_group_id, "")
+  container_port        = var.container_port
+  cpu                   = var.cpu
+  memory                = var.memory
+  desired_count         = var.desired_count
+  image_tag             = var.image_tag
+  health_check_path     = var.health_check_path
+  log_retention_days    = var.log_retention_days
+  environment_variables = {
+    APP_COLOR               = "green"
+    APP_VERSION             = var.green_version
+    PYTHONDONTWRITEBYTECODE = "1"
+  }
+  tags = var.tags
 }
 
 module "github_oidc" {
@@ -116,8 +152,9 @@ module "autoscaling" {
 
   project_name = var.project_name
   environment  = var.environment
-  cluster_name = try(module.ecs[0].cluster_name, "")
-  service_name = try(module.ecs[0].service_name, "")
+  # Scale the active slot; the standby holds its current task count untouched
+  cluster_name = var.active_color == "blue" ? try(module.ecs_blue[0].cluster_name, "") : try(module.ecs_green[0].cluster_name, "")
+  service_name = var.active_color == "blue" ? try(module.ecs_blue[0].service_name, "") : try(module.ecs_green[0].service_name, "")
   min_capacity = var.min_capacity
   max_capacity = var.max_capacity
   tags         = var.tags
