@@ -69,6 +69,24 @@ resource "aws_ecs_task_definition" "this" {
         }
       ]
 
+      # Prevents malware from writing to the container filesystem.
+      # Set PYTHONDONTWRITEBYTECODE=1 in environment_variables to suppress pyc warnings.
+      readonlyRootFilesystem = true
+      privileged             = false
+
+      # Drop all Linux capabilities; add back only what the app explicitly needs.
+      linuxParameters = {
+        capabilities = { drop = ["ALL"] }
+        # tmpfs gives the app a writable /tmp without exposing the root FS.
+        tmpfs = [
+          {
+            containerPath = "/tmp"
+            size          = 64
+            mountOptions  = ["rw", "noexec", "nosuid"]
+          }
+        ]
+      }
+
       # Converts map to [{name, value}] list expected by ECS
       environment = [
         for k, v in var.environment_variables : { name = k, value = v }

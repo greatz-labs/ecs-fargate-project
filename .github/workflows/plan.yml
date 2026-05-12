@@ -21,16 +21,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4.1.0
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.1.0
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3.1.2
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3.1.2
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
@@ -42,6 +42,23 @@ jobs:
 
       - name: Terraform Validate
         run: terraform validate
+
+      # Scans Terraform for misconfigs before planning.
+      # Skips below are lab-only trade-offs — document any new skip added here:
+      #   CKV_AWS_158 — CloudWatch log encryption requires KMS CMK (lab cost)
+      #   CKV_AWS_150 — ALB deletion protection (lab, needed for terraform destroy)
+      #   CKV_AWS_131 — ALB drop invalid HTTP headers (HTTP-only lab endpoint)
+      #   CKV_AWS_18  — S3 access logging on the ALB-logs bucket (avoids recursive logging)
+      #   CKV_AWS_144 — S3 cross-region replication (lab)
+      #   CKV_AWS_145 — S3 KMS encryption — SSE-S3 is sufficient for access logs (lab)
+      #   CKV2_AWS_62 — S3 event notifications (lab)
+      - name: Checkov IaC scan
+        id: checkov
+        run: |
+          pip install checkov --quiet
+          checkov -d . --framework terraform --compact \
+            --skip-check CKV_AWS_158,CKV_AWS_150,CKV_AWS_131,CKV_AWS_18,CKV_AWS_144,CKV_AWS_145,CKV2_AWS_62
+        continue-on-error: true
 
       # continue-on-error so we can always post the comment, even on plan failure
       - name: Terraform Plan
@@ -82,7 +99,7 @@ jobs:
       # Finds an existing bot comment and updates it, or creates a new one.
       # Keeps the PR timeline clean on repeated pushes.
       - name: Post plan to PR comment
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7.0.1
         with:
           script: |
             const fs      = require('fs');
@@ -149,7 +166,8 @@ jobs:
           cat /tmp/plan.txt >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-      # Fail the check after posting the comment so reviewers see the output
-      - name: Fail if plan errored
-        if: steps.plan.outcome == 'failure'
+      - name: Fail if any check failed
+        if: |
+          steps.checkov.outcome == 'failure' ||
+          steps.plan.outcome    == 'failure'
         run: exit 1

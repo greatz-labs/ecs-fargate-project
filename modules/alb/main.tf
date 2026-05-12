@@ -1,3 +1,6 @@
+data "aws_caller_identity" "current" {}
+data "aws_elb_service_account" "this" {}
+
 locals {
   name_prefix   = "${var.project_name}-${var.environment}"
   https_enabled = var.certificate_arn != ""
@@ -6,6 +9,68 @@ locals {
     Project     = var.project_name
     Environment = var.environment
     ManagedBy   = "terraform"
+  })
+}
+
+# ── ALB access log bucket ─────────────────────────────────────────────────────
+# Receives one log entry per ALB request. Bucket name must be globally unique.
+
+resource "aws_s3_bucket" "alb_logs" {
+  # Account ID suffix ensures uniqueness without a random suffix
+  bucket        = "${local.name_prefix}-alb-logs-${data.aws_caller_identity.current.account_id}"
+  force_destroy = true # lab — allows terraform destroy without manual bucket emptying
+
+  tags = merge(local.common_tags, { Name = "${local.name_prefix}-alb-logs" })
+}
+
+resource "aws_s3_bucket_public_access_block" "alb_logs" {
+  bucket                  = aws_s3_bucket.alb_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# Auto-expire logs after 90 days to control storage costs
+resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  rule {
+    id     = "expire-alb-logs"
+    status = "Enabled"
+
+    filter {} # applies to all objects in the bucket
+
+    expiration {
+      days = 90
+    }
+  }
+}
+
+# ELB service account needs PutObject on the log prefix
+resource "aws_s3_bucket_policy" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { AWS = data.aws_elb_service_account.this.arn }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.alb_logs.arn}/alb/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+      }
+    ]
   })
 }
 
@@ -59,7 +124,15 @@ resource "aws_lb" "this" {
   # Prevent accidental deletion — remove this attribute before terraform destroy
   enable_deletion_protection = false
 
+  access_logs {
+    bucket  = aws_s3_bucket.alb_logs.id
+    prefix  = "alb"
+    enabled = true
+  }
+
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-alb" })
+
+  depends_on = [aws_s3_bucket_policy.alb_logs]
 }
 
 # ── Target group ──────────────────────────────────────────────────────────────

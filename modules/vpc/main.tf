@@ -114,3 +114,58 @@ resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private[count.index].id
 }
+
+# ── VPC Flow Logs ─────────────────────────────────────────────────────────────
+# Logs all accepted/rejected traffic for the VPC — required by CIS AWS Benchmark.
+
+resource "aws_cloudwatch_log_group" "flow_logs" {
+  name              = "/vpc/${local.name_prefix}-flow-logs"
+  retention_in_days = 30
+
+  tags = merge(local.common_tags, { Name = "/vpc/${local.name_prefix}-flow-logs" })
+}
+
+resource "aws_iam_role" "flow_logs" {
+  name = "${local.name_prefix}-vpc-flow-logs"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "vpc-flow-logs.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy" "flow_logs" {
+  name = "${local.name_prefix}-vpc-flow-logs"
+  role = aws_iam_role.flow_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_flow_log" "this" {
+  log_destination      = aws_cloudwatch_log_group.flow_logs.arn
+  log_destination_type = "cloud-watch-logs"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.this.id
+  iam_role_arn         = aws_iam_role.flow_logs.arn
+
+  tags = merge(local.common_tags, { Name = "${local.name_prefix}-flow-log" })
+}
