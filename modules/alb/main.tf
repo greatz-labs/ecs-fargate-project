@@ -197,6 +197,98 @@ resource "aws_lb_target_group" "green" {
   }
 }
 
+# ── Counter target groups ─────────────────────────────────────────────────────
+# Only created when create_counter = true. Both slots are always registered so
+# ECS can validate the TG-to-ALB association at service creation time.
+
+resource "aws_lb_target_group" "counter_blue" {
+  count = var.create_counter ? 1 : 0
+
+  # ecs-fargate-dev-counter-blue-tg = 31 chars (AWS limit: 32)
+  name        = "${local.name_prefix}-counter-blue-tg"
+  port        = var.counter_container_port
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  deregistration_delay = var.deregistration_delay
+
+  health_check {
+    path                = var.counter_health_check_path
+    protocol            = "HTTP"
+    interval            = var.health_check_interval
+    healthy_threshold   = var.health_check_healthy_threshold
+    unhealthy_threshold = var.health_check_unhealthy_threshold
+    timeout             = 5
+    matcher             = "200-299"
+  }
+
+  tags = merge(local.common_tags, { Name = "${local.name_prefix}-counter-blue-tg" })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_lb_target_group" "counter_green" {
+  count = var.create_counter ? 1 : 0
+
+  name        = "${local.name_prefix}-counter-green-tg"
+  port        = var.counter_container_port
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  deregistration_delay = var.deregistration_delay
+
+  health_check {
+    path                = var.counter_health_check_path
+    protocol            = "HTTP"
+    interval            = var.health_check_interval
+    healthy_threshold   = var.health_check_healthy_threshold
+    unhealthy_threshold = var.health_check_unhealthy_threshold
+    timeout             = 5
+    matcher             = "200-299"
+  }
+
+  tags = merge(local.common_tags, { Name = "${local.name_prefix}-counter-green-tg" })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Path-based rule routes /counter and /counter/* to the counter slot TGs.
+# Priority 10: evaluated before the banner default action; leaves headroom for future rules.
+resource "aws_lb_listener_rule" "counter_https" {
+  count = var.create_counter && local.https_enabled ? 1 : 0
+
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 10
+
+  condition {
+    path_pattern {
+      values = ["/counter", "/counter/*"]
+    }
+  }
+
+  action {
+    type = "forward"
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.counter_blue[0].arn
+        weight = var.active_color == "blue" ? 100 : 0
+      }
+      target_group {
+        arn    = aws_lb_target_group.counter_green[0].arn
+        weight = var.active_color == "green" ? 100 : 0
+      }
+    }
+  }
+
+  tags = merge(local.common_tags, { Name = "${local.name_prefix}-counter-https-rule" })
+}
+
 # ── Listeners ─────────────────────────────────────────────────────────────────
 
 resource "aws_lb_listener" "http" {

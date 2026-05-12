@@ -37,3 +37,13 @@ output "https_listener_arn" {
   description = "HTTPS listener ARN — null if no certificate_arn was provided"
   value       = try(aws_lb_listener.https[0].arn, null)
 }
+
+output "counter_blue_target_group_arn" {
+  description = "Counter blue slot target group ARN — null when create_counter = false"
+  value       = try(aws_lb_target_group.counter_blue[0].arn, null)
+}
+
+output "counter_green_target_group_arn" {
+  description = "Counter green slot target group ARN — null when create_counter = false"
+  value       = try(aws_lb_target_group.counter_green[0].arn, null)
+}

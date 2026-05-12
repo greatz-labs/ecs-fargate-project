@@ -193,8 +193,14 @@ variable "create_alb" {
   default     = true
 }
 
-variable "create_ecs" {
-  description = "Create the ECS module resources"
+variable "create_ecs_blue" {
+  description = "Create blue slot ECS resources (cluster, service, task definition)"
+  type        = bool
+  default     = true
+}
+
+variable "create_ecs_green" {
+  description = "Create green slot ECS resources (cluster, service, task definition)"
   type        = bool
   default     = true
 }
@@ -209,4 +215,82 @@ variable "create_github_oidc" {
   description = "Create the GitHub OIDC role and provider"
   type        = bool
   default     = true
+}
+
+# ── Counter App ───────────────────────────────────────────────────────────────
+
+variable "counter_container_port" {
+  description = "Port the counter container listens on"
+  type        = number
+  default     = 8080
+}
+
+variable "counter_cpu" {
+  description = "Fargate CPU units for counter tasks (256 / 512 / 1024 / 2048 / 4096)"
+  type        = string
+  default     = "256"
+}
+
+variable "counter_memory" {
+  description = "Fargate memory MiB for counter tasks"
+  type        = string
+  default     = "512"
+}
+
+variable "counter_image_tag" {
+  description = "Counter container image tag. Override with git SHA in CI."
+  type        = string
+  default     = "latest"
+}
+
+variable "counter_health_check_path" {
+  description = "Health check path for counter ALB target groups and containers"
+  type        = string
+  default     = "/counter/health"
+}
+
+variable "counter_blue_version" {
+  description = "APP_VERSION injected into counter blue ECS tasks"
+  type        = string
+  default     = "1.0.0"
+}
+
+variable "counter_green_version" {
+  description = "APP_VERSION injected into counter green ECS tasks"
+  type        = string
+  default     = "1.0.0"
+}
+
+variable "counter_blue_desired_count" {
+  description = "Number of tasks for the counter blue slot. Set to 0 when not in use."
+  type        = number
+  default     = 0
+}
+
+variable "counter_green_desired_count" {
+  description = "Number of tasks for the counter green slot. Set to 0 when not in use."
+  type        = number
+  default     = 2
+}
+
+# ── Counter module toggles ─────────────────────────────────────────────────────
+# Enable in order: ecr_counter → (push image) → counter_alb + ecs_counter
+# Disable in reverse order before removing banner ECS resources.
+
+variable "create_ecr_counter" {
+  description = "Create the counter ECR repository"
+  type        = bool
+  default     = false
+}
+
+variable "create_counter_alb" {
+  description = "Create counter target groups and listener rule in the ALB module"
+  type        = bool
+  default     = false
+}
+
+variable "create_ecs_counter" {
+  description = "Create counter ECS services (blue and green slots)"
+  type        = bool
+  default     = false
 }

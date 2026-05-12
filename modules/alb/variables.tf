@@ -67,6 +67,24 @@ variable "deregistration_delay" {
   default     = 30
 }
 
+variable "create_counter" {
+  description = "Create counter target groups and HTTPS listener rule for /counter paths"
+  type        = bool
+  default     = false
+}
+
+variable "counter_container_port" {
+  description = "Port the counter container listens on"
+  type        = number
+  default     = 8080
+}
+
+variable "counter_health_check_path" {
+  description = "Health check path for counter target groups"
+  type        = string
+  default     = "/counter/health"
+}
+
 variable "tags" {
   type    = map(string)
   default = {}
