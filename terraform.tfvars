@@ -16,7 +16,7 @@ tags = {
 }
 
 # ── Container / ECS ──────────────────────────────────────────────────────────
-container_port     = 8080
+container_port     = 3000
 health_check_path  = "/"
 cpu                = "512"
 memory             = "1024"
