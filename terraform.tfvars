@@ -44,4 +44,4 @@ create_iam         = true
 create_alb         = true
 create_ecs         = true
 create_autoscaling = true
-create_github_oidc = true
+create_github_oidc = false
