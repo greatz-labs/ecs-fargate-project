@@ -33,7 +33,7 @@ max_capacity = 4
 # then apply. Scale down the old active only after validating the new one.
 active_color        = "green"
 blue_desired_count  = 0
-green_desired_count = 2
+green_desired_count = 0
 blue_version        = "1.0.0"
 green_version       = "2.0.0"
 
@@ -50,7 +50,7 @@ create_iam         = true
 create_alb         = true
 create_ecs_blue    = true
 create_ecs_green   = true
-create_autoscaling = true
+create_autoscaling = false
 create_github_oidc = false
 
 # ── Counter App ───────────────────────────────────────────────────────────────
