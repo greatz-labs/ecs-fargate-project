@@ -77,3 +77,28 @@ output "github_actions_role_arn" {
   description = "Set this as AWS_ROLE_ARN in GitHub repo → Settings → Variables"
   value       = try(module.github_oidc[0].role_arn, null)
 }
+
+output "counter_ecr_repository_url" {
+  description = "Counter ECR repository URL — set as ECR_REPOSITORY in the ecs-fargate-traffic-splitter GitHub repo"
+  value       = try(module.ecr_counter[0].repository_url, null)
+}
+
+output "counter_blue_service_name" {
+  description = "Counter blue ECS service name — set as ECS_SERVICE when deploying to the blue slot"
+  value       = try(module.ecs_counter_blue[0].service_name, null)
+}
+
+output "counter_green_service_name" {
+  description = "Counter green ECS service name — set as ECS_SERVICE when deploying to the green slot"
+  value       = try(module.ecs_counter_green[0].service_name, null)
+}
+
+output "cloudwatch_log_group_counter_blue" {
+  description = "CloudWatch log group for counter blue ECS task logs"
+  value       = try(module.ecs_counter_blue[0].cloudwatch_log_group_name, null)
+}
+
+output "cloudwatch_log_group_counter_green" {
+  description = "CloudWatch log group for counter green ECS task logs"
+  value       = try(module.ecs_counter_green[0].cloudwatch_log_group_name, null)
+}

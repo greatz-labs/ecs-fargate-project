@@ -64,19 +64,22 @@ module "alb" {
   count  = var.create_alb ? 1 : 0
   source = "./modules/alb"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  vpc_id            = try(module.vpc[0].vpc_id, "")
-  public_subnet_ids = try(module.vpc[0].public_subnet_ids, [])
-  container_port    = var.container_port
-  certificate_arn   = data.aws_acm_certificate.this.arn
-  active_color      = var.active_color
-  health_check_path = var.health_check_path
-  tags              = var.tags
+  project_name              = var.project_name
+  environment               = var.environment
+  vpc_id                    = try(module.vpc[0].vpc_id, "")
+  public_subnet_ids         = try(module.vpc[0].public_subnet_ids, [])
+  container_port            = var.container_port
+  certificate_arn           = data.aws_acm_certificate.this.arn
+  active_color              = var.active_color
+  health_check_path         = var.health_check_path
+  create_counter            = var.create_counter_alb
+  counter_container_port    = var.counter_container_port
+  counter_health_check_path = var.counter_health_check_path
+  tags                      = var.tags
 }
 
 module "ecs_blue" {
-  count  = var.create_ecs ? 1 : 0
+  count  = var.create_ecs_blue ? 1 : 0
   source = "./modules/ecs"
 
   slot                  = "blue"
@@ -92,11 +95,10 @@ module "ecs_blue" {
   container_port        = var.container_port
   cpu                   = var.cpu
   memory                = var.memory
-  # Active slot runs var.desired_count tasks; standby idles at 0
-  desired_count      = var.active_color == "blue" ? var.desired_count : 0
-  image_tag          = var.image_tag
-  health_check_path  = var.health_check_path
-  log_retention_days = var.log_retention_days
+  desired_count         = var.blue_desired_count
+  image_tag             = var.image_tag
+  health_check_path     = var.health_check_path
+  log_retention_days    = var.log_retention_days
   environment_variables = {
     APP_COLOR               = "blue"
     APP_VERSION             = var.blue_version
@@ -106,7 +108,7 @@ module "ecs_blue" {
 }
 
 module "ecs_green" {
-  count  = var.create_ecs ? 1 : 0
+  count  = var.create_ecs_green ? 1 : 0
   source = "./modules/ecs"
 
   slot                  = "green"
@@ -122,17 +124,94 @@ module "ecs_green" {
   container_port        = var.container_port
   cpu                   = var.cpu
   memory                = var.memory
-  # Active slot runs var.desired_count tasks; standby idles at 0
-  desired_count      = var.active_color == "green" ? var.desired_count : 0
-  image_tag          = var.image_tag
-  health_check_path  = var.health_check_path
-  log_retention_days = var.log_retention_days
+  desired_count         = var.green_desired_count
+  image_tag             = var.image_tag
+  health_check_path     = var.health_check_path
+  log_retention_days    = var.log_retention_days
   environment_variables = {
     APP_COLOR               = "green"
     APP_VERSION             = var.green_version
     PYTHONDONTWRITEBYTECODE = "1"
   }
   tags = var.tags
+}
+
+module "ecr_counter" {
+  count  = var.create_ecr_counter ? 1 : 0
+  source = "./modules/ecr"
+
+  project_name = var.project_name
+  environment  = var.environment
+  name_suffix  = "counter"
+  tags         = var.tags
+}
+
+module "ecs_counter_blue" {
+  count  = var.create_ecs_counter ? 1 : 0
+  source = "./modules/ecs_service"
+
+  slot                  = "blue"
+  app_name              = "counter"
+  project_name          = var.project_name
+  environment           = var.environment
+  cluster_name          = try(module.ecs_blue[0].cluster_name, "")
+  vpc_id                = try(module.vpc[0].vpc_id, "")
+  private_subnet_ids    = try(module.vpc[0].private_subnet_ids, [])
+  execution_role_arn    = try(module.iam[0].execution_role_arn, "")
+  task_role_arn         = try(module.iam[0].task_role_arn, "")
+  ecr_repository_url    = try(module.ecr_counter[0].repository_url, "")
+  target_group_arn      = coalesce(try(module.alb[0].counter_blue_target_group_arn, null), "")
+  alb_security_group_id = try(module.alb[0].alb_security_group_id, "")
+  container_port        = var.counter_container_port
+  cpu                   = var.counter_cpu
+  memory                = var.counter_memory
+  desired_count         = var.counter_blue_desired_count
+  image_tag             = var.counter_image_tag
+  health_check_path     = var.counter_health_check_path
+  log_retention_days    = var.log_retention_days
+  environment_variables = {
+    APP_COLOR               = "blue"
+    APP_VERSION             = var.counter_blue_version
+    PYTHONDONTWRITEBYTECODE = "1"
+  }
+  tags = var.tags
+
+  # Counter service depends on the banner cluster; ensures correct destroy ordering
+  # when both create_ecs_counter and create_ecs_blue are set to false together.
+  depends_on = [module.ecs_blue]
+}
+
+module "ecs_counter_green" {
+  count  = var.create_ecs_counter ? 1 : 0
+  source = "./modules/ecs_service"
+
+  slot                  = "green"
+  app_name              = "counter"
+  project_name          = var.project_name
+  environment           = var.environment
+  cluster_name          = try(module.ecs_green[0].cluster_name, "")
+  vpc_id                = try(module.vpc[0].vpc_id, "")
+  private_subnet_ids    = try(module.vpc[0].private_subnet_ids, [])
+  execution_role_arn    = try(module.iam[0].execution_role_arn, "")
+  task_role_arn         = try(module.iam[0].task_role_arn, "")
+  ecr_repository_url    = try(module.ecr_counter[0].repository_url, "")
+  target_group_arn      = coalesce(try(module.alb[0].counter_green_target_group_arn, null), "")
+  alb_security_group_id = try(module.alb[0].alb_security_group_id, "")
+  container_port        = var.counter_container_port
+  cpu                   = var.counter_cpu
+  memory                = var.counter_memory
+  desired_count         = var.counter_green_desired_count
+  image_tag             = var.counter_image_tag
+  health_check_path     = var.counter_health_check_path
+  log_retention_days    = var.log_retention_days
+  environment_variables = {
+    APP_COLOR               = "green"
+    APP_VERSION             = var.counter_green_version
+    PYTHONDONTWRITEBYTECODE = "1"
+  }
+  tags = var.tags
+
+  depends_on = [module.ecs_green]
 }
 
 module "github_oidc" {

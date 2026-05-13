@@ -9,7 +9,7 @@ locals {
 }
 
 resource "aws_ecr_repository" "this" {
-  name                 = "${local.name_prefix}-app"
+  name                 = "${local.name_prefix}-${var.name_suffix}"
   image_tag_mutability = var.image_tag_mutability
 
   image_scanning_configuration {
@@ -21,7 +21,7 @@ resource "aws_ecr_repository" "this" {
     encryption_type = "AES256"
   }
 
-  tags = merge(local.common_tags, { Name = "${local.name_prefix}-app" })
+  tags = merge(local.common_tags, { Name = "${local.name_prefix}-${var.name_suffix}" })
 }
 
 resource "aws_ecr_lifecycle_policy" "this" {

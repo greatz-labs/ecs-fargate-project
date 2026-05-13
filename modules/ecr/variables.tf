@@ -29,6 +29,12 @@ variable "max_image_count" {
   default     = 30
 }
 
+variable "name_suffix" {
+  description = "Suffix appended to the repo name after the project-environment prefix (e.g. 'app' or 'counter')"
+  type        = string
+  default     = "app"
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

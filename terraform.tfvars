@@ -29,10 +29,13 @@ min_capacity = 1
 max_capacity = 4
 
 # ── Blue-Green ────────────────────────────────────────────────────────────────
-# Change active_color to "green" + terraform apply to cut over; revert to roll back 
-active_color  = "green"
-blue_version  = "1.0.0"
-green_version = "2.0.0"
+# Cutover: set active_color + bump the standby desired_count to var.desired_count,
+# then apply. Scale down the old active only after validating the new one.
+active_color        = "green"
+blue_desired_count  = 0
+green_desired_count = 0
+blue_version        = "1.0.0"
+green_version       = "2.0.0"
 
 # ── GitHub OIDC ───────────────────────────────────────────────────────────────
 github_org      = "greatz-labs"
@@ -45,6 +48,23 @@ create_vpc         = true
 create_ecr         = true
 create_iam         = true
 create_alb         = true
-create_ecs         = true
-create_autoscaling = true
+create_ecs_blue    = true
+create_ecs_green   = true
+create_autoscaling = false
 create_github_oidc = false
+
+# ── Counter App ───────────────────────────────────────────────────────────────
+counter_container_port      = 8080
+counter_cpu                 = "256"
+counter_memory              = "512"
+counter_image_tag           = "latest"
+counter_health_check_path   = "/counter/health"
+counter_blue_version        = "1.0.0"
+counter_green_version       = "1.0.0"
+counter_blue_desired_count  = 0
+counter_green_desired_count = 2
+
+# Enable in order: ecr_counter first → push image → then alb + ecs
+create_ecr_counter = false
+create_counter_alb = false
+create_ecs_counter = false
