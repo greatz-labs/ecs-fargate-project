@@ -66,5 +66,5 @@ counter_green_desired_count = 0
 
 # Enable in order: ecr_counter first → push image → then alb + ecs
 create_ecr_counter = true
-create_counter_alb = true
-create_ecs_counter = true
+create_counter_alb = false
+create_ecs_counter = false
