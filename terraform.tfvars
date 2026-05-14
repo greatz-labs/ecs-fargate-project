@@ -31,7 +31,7 @@ max_capacity = 4
 # ── Blue-Green ────────────────────────────────────────────────────────────────
 # Cutover: set active_color + bump the standby desired_count to var.desired_count,
 # then apply. Scale down the old active only after validating the new one.
-active_color        = "green"
+active_color        = "blue"
 blue_desired_count  = 0
 green_desired_count = 0
 blue_version        = "1.0.0"
