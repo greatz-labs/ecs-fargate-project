@@ -62,7 +62,7 @@ counter_health_check_path   = "/counter/health"
 counter_blue_version        = "1.0.0"
 counter_green_version       = "1.0.0"
 counter_blue_desired_count  = 2
-counter_green_desired_count = 2
+counter_green_desired_count = 0
 
 # Enable in order: ecr_counter first → push image → then alb + ecs
 create_ecr_counter = true
