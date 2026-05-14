@@ -31,7 +31,7 @@ max_capacity = 4
 # ── Blue-Green ────────────────────────────────────────────────────────────────
 # Cutover: set active_color + bump the standby desired_count to var.desired_count,
 # then apply. Scale down the old active only after validating the new one.
-active_color        = "green"
+active_color        = "blue"
 blue_desired_count  = 0
 green_desired_count = 0
 blue_version        = "1.0.0"
@@ -61,7 +61,7 @@ counter_image_tag           = "latest"
 counter_health_check_path   = "/counter/health"
 counter_blue_version        = "1.0.0"
 counter_green_version       = "1.0.0"
-counter_blue_desired_count  = 0
+counter_blue_desired_count  = 2
 counter_green_desired_count = 2
 
 # Enable in order: ecr_counter first → push image → then alb + ecs
